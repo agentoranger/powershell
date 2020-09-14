@@ -173,4 +173,4 @@ using System.Runtime.InteropServices;
   }
 }
 
-Take-Ownership -Path "Registry::HKCR\CLSID\{0D43FE01-F093-11CF-8940-00A0C9054228}" -User "Administrator" -Recurse -Verbose
+Take-Ownership -Path "Registry::HKCR\CLSID\{0D43FE01-F093-11CF-8940-00A0C9054228}" -User "Administrator" -Recurse
