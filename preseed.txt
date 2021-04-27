@@ -1,0 +1,1 @@
+d-i preseed/early_command string sed -i -e '/Package: libc6-udeb/{N;N;s/Version: 2.31-0ubuntu9.*/Version: 2.31-0ubuntu9.3/}' /var/lib/dpkg/status;
