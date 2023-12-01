@@ -24,26 +24,18 @@ function Get-GitHubRelease {
                 }
             }
 
-           #Write-Output $latestRelease.DownloadUrl
-           #Write-Output "Repository Owner: $($latestRelease.Name)"
-           #Write-Output "Repository Name: $($latestRelease.Name)"
-           #Write-Output "Release Name: $($latestRelease.Name)"
-           #Write-Output "Tag Name: $($latestRelease.TagName)"
-           #Write-Output "Published At: $($latestRelease.PublishedAt)"
-           #Write-Output "`nAssets:"
-
             ForEach ($Release in $latestRelease.Assets) {
                 Write-Output $Release.DownloadUrl
             }
         } catch {
-            Write-Error "[$($MyInvocation.MyCommand.Name)]`tError occured while downloading OpenSSH: $_"
+            Write-Error "[$($MyInvocation.MyCommand.Name)]`tError occured while getting GitHub info: $_"
         }
     }
 }
 
 # Example usage
-Get-GitHubRelease -RepoOwner "PowerShell" -RepoName "Win32-OpenSSH"
-Get-GitHubRelease -RepoOwner "PowerShell" -RepoName "LibreSSL"
+Get-GitHubRelease -Owner PowerShell -Name Win32-OpenSSH
+Get-GitHubRelease -Owner PowerShell -Name LibreSSL
 
 # Example output
 https://github.com/PowerShell/Win32-OpenSSH/releases/download/v9.4.0.0p1-Beta/OpenSSH-ARM.zip
@@ -59,9 +51,13 @@ https://github.com/PowerShell/Win32-OpenSSH/releases/download/v9.4.0.0p1-Beta/Op
 https://github.com/PowerShell/Win32-OpenSSH/releases/download/v9.4.0.0p1-Beta/OpenSSH-Win64_Symbols.zip
 https://github.com/PowerShell/LibreSSL/releases/download/V3.7.3.0/LibreSSL.zip
 
-# Example usage, filtering strings
+# Example usage, filtering with fuzzy strings
   $Filter = '*Win64*'
-$Releases = Get-GitHubRelease -RepoOwner "PowerShell" -RepoName "Win32-OpenSSH"
+$Releases = Get-GitHubRelease -Owner PowerShell -Name Win32-OpenSSH
 $Filtered = $Releases | Where-Object { $_ -like $filter }
 $Filtered
 
+# Example output
+https://github.com/PowerShell/Win32-OpenSSH/releases/download/v9.4.0.0p1-Beta/OpenSSH-Win64-v9.4.0.0.msi
+https://github.com/PowerShell/Win32-OpenSSH/releases/download/v9.4.0.0p1-Beta/OpenSSH-Win64.zip
+https://github.com/PowerShell/Win32-OpenSSH/releases/download/v9.4.0.0p1-Beta/OpenSSH-Win64_Symbols.zip
