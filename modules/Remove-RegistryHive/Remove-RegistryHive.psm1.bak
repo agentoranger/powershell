@@ -1,0 +1,39 @@
+﻿#Remove-RegistryHive.psm1
+#$VerbosePreference = 'Continue'
+
+function Remove-RegistryHive {
+    param (
+        [Parameter(Mandatory=$true, Position=0, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
+        [ValidatePattern('^[^;~/\\\.\:]+$')]
+        [string]$Mount
+    )
+    process {
+        $Drive = Get-PSDrive -Name $Mount -PSProvider Registry -ErrorAction SilentlyContinue -Scope Global
+        if (-not $Drive) {
+            Write-Warning   "[$($MyInvocation.MyCommand.Name)]`tRegistry hive not currently loaded`t[$($Path)] [$($Mount)]" ; return
+        }
+        try {
+            $Drive | Remove-PSDrive
+             $Path = Join-Path -Path 'Microsoft.PowerShell.Core\Registry::' -ChildPath $Drive.Root
+            $Files = Get-Item -Path $Path
+            $Files.Dispose();   $Files.Close()
+            [GC]::Collect();    [GC]::WaitForPendingFinalizers()
+
+            $FilePath = Join-Path -Path $env:WINDIR -ChildPath 'system32\reg.exe'
+            $ArgumentList = @('unload',$Drive.Root)
+            $Process = Start-Process -FilePath $FilePath -ArgumentList $ArgumentList -WindowStyle Hidden -PassThru -Wait
+            $Process.Dispose(); $Process.Close()
+            [GC]::Collect();    [GC]::WaitForPendingFinalizers()
+
+            if ($Process.ExitCode) {
+                Write-Error "[$($MyInvocation.MyCommand.Name)]`t`tRegistry hive failed to be unloaded`t[$($Mount)]"
+            }
+
+            Write-Verbose   "[$($MyInvocation.MyCommand.Name)]`t`tRegistry hive unloaded successfully`t`t[$($Mount)]"
+        } catch [System.Management.Automation.ItemNotFoundException] {
+            Write-Error     "[$($MyInvocation.MyCommand.Name)]`t`tRegistry hive file could not be found`t[$($Mount)] $_"
+        } catch {
+            Write-Error     "[$($MyInvocation.MyCommand.Name)]`t`tRegistry hive failed to be unloaded`t`t[$($Mount)] $_"
+        }
+    }
+}
