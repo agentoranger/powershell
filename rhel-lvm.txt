@@ -1,3 +1,5 @@
+## unfinished, junk notes, I used this to remind myself what to do, but it is nothing like a procedure, just hints
+
 # Rescan disks the old janky way
 
 echo 1 > /sys/class/block/sda1/d
