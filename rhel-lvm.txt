@@ -1,0 +1,233 @@
+# Rescan disks the old janky way
+
+echo 1 > /sys/class/block/sda1/d
+echo 1 > /sys/class/scsi_device/0:0:0:0/device/block/sda/device/rescan
+echo 1 > /sys/class/scsi_device/0:0:0:1/device/block/sda/device/rescan
+echo 1 > /sys/class/scsi_device/1:0:0:0/device/block/sda/device/rescan
+echo 1 > /sys/class/scsi_device/2:0:0:0/device/block/sda/device/rescan
+echo 1 > /sys/class/scsi_device/2:0:1:0/device/block/sdb/device/rescan
+echo 1 > /sys/class/scsi_device/2:0:2:0/device/block/sdc/device/rescan
+echo 1 > /sys/class/scsi_device/2:0:3:0/device/block/sdd/device/rescan
+echo 1 > /sys/class/scsi_device/2:0:4:0/device/block/sde/device/rescan
+
+# Rescan disks automatically
+
+for BUS in /sys/class/scsi_host/host*/scan
+do
+   echo "- - -" >  ${BUS}
+done
+
+# Rescan partitions
+
+lsblk
+partprobe -s
+partx -v -a /dev/sda
+partx -v -a /dev/sdb
+partx -v -a /dev/sdc
+partx -v -a /dev/sdd
+partx -v -a /dev/sde
+
+## List physical disks and partitions
+
+fdisk -l
+cfdisk 
+
+# Create a physical volume using an unallocated pysical disk
+
+pvcreate /dev/sdb
+pvcreate /dev/sdc
+pvcreate /dev/sdd
+pvcreate /dev/sde
+
+# Extend a physical volume using an unallocated pysical space
+
+pvresize /dev/sdb
+pvresize /dev/sdc
+pvresize /dev/sdd
+pvresize /dev/sde
+
+# List physical volumes
+
+pvs
+pvdisplay /dev/sdb
+pvdisplay /dev/sdc
+pvdisplay /dev/sdd
+pvdisplay /dev/sde
+
+# Create new volume group
+
+vgcreate vg0 /dev/sdb
+vgcreate vg00 /dev/sdd
+vgcreate vgdata /dev/sde
+vgcreate vgbackup /dev/sdd
+
+vgcreate splunk /dev/sdb
+vgcreate tenable /dev/sdb
+vgcreate data /dev/sdb
+
+# Extend existing volume group
+
+vgextend gitlab_vg /dev/sde
+vgextend gitlab_vg /dev/sd
+
+vgextend vg0 /dev/sdb
+vgextend vg00 /dev/sdd
+vgextend vgdata /dev/sde
+vgextend vgbackup /dev/sdd
+
+vgextend splunk /dev/sdb
+vgextend tenable /dev/sdb
+vgextend data /dev/sdb
+
+# List volume groups
+
+vgs
+
+# Create new logical volume (lvm) using unallocated volume group
+
+lvcreate -n lvopt -L +8G vg00
+lvcreate -n lvvarlog -L +12G vg00
+lvcreate -n lvorabck -l +100%FREE vgdata
+lvcreate -n lvbackup -l +100%FREE vgbackup
+
+lvcreate -n log -l +100%FREE splunk
+lvcreate -n opt -l +100%FREE splunk
+lvcreate -n opt -l +100%FREE tenable
+lvcreate -n srv -l +100%FREE data
+
+# Extend existing logical volume (lvm) using unallocated volume group
+
+lvextend -l +100%FREE /dev/gitlab_vg/gitlab_lv
+lvextend -l +100%FREE /dev/gitlab_vg/data_lv
+
+lvextend -L +8G /dev/vg00/lvopt 
+lvextend -L +12G /dev/vg00/lvvarlog
+lvextend -l +100%FREE /dev/vgdata/lvorabck
+lvextend -l +100%FREE /dev/vgbackup/lvbackup
+
+lvextend -l +100%FREE /dev/splunk/log
+lvextend -l +100%FREE /dev/splunk/opt
+lvextend -l +100%FREE /dev/tenable/opt
+lvextend -l +100%FREE /dev/data/srv
+
+# Create new file system on existing logical volume (lvm)
+
+mkfs.ext4 /dev/vgbackup/lvbackup
+
+mkfs.xfs /dev/splunk/log
+mkfs.xfs /dev/splunk/opt
+mkfs.xfs /dev/tenable/opt
+mkfs.xfs /dev/data/srv
+
+# List blkid for existing logical volume (lvm) Optional, when using painful blkid for mounting, but dont do that.
+
+blkid /dev/vg00/lvopt 
+blkid /dev/vg00/lvvarlog
+blkid /dev/vgdata/lvorabck
+blkid /dev/vgbackup/lvbackup
+
+blkid /dev/splunk/log
+blkid /dev/splunk/opt
+blkid /dev/tenable/opt
+blkid /dev/data/srv
+
+# Update the filesystem table (/etc/fstab)
+
+nano /etc/fstab
+
+	#RHEL6
+	/dev/mapper/vg00-lvopt			/opt		ext4	defaults	0 0
+	/dev/mapper/vg00-lvvarlog		/var/log	ext4	defaults	0 0
+	/dev/mapper/vgdata-lvorabck		/orabck		ext4	defaults	0 0
+	/dev/mapper/vgbackup-lvbackup	/backup		ext4	defaults	0 0
+	
+	#RHEL8
+	/dev/mapper/splunk-log                    /var/log/splunk xfs      defaults,nodev,noexec,nosuid          0 0
+	/dev/mapper/splunk-opt                    /opt/splunk     xfs      defaults,nodev,noexec,nosuid          0 0
+	/dev/mapper/tenable-opt                   /opt/sc         xfs      defaults,nodev,noexec,nosuid          0 0
+	/dev/mapper/data-srv                      /srv            xfs      defaults,nodev,noexec,nosuid          0 0
+
+# Make the directory
+
+mkdir /var/log/splunk
+
+	chown -R root:root /var/log/splunk
+
+	find /var/log/splunk -type d -exec chmod 750 {} +
+	find /var/log/splunk -type f -exec chmod 770 {} +
+
+mkdir /opt/splunk
+
+	chown -R root:root /opt/splunk
+
+	find /opt/splunk -type d -exec chmod 750 {} +
+	find /opt/splunk -type f -exec chmod 750 {} +
+
+mkdir /opt/sc
+
+	chown -R root:root /opt/sc
+
+	find /opt/sc -type d -exec chmod 750 {} +
+	find /opt/sc -type f -exec chmod 750 {} +
+
+# Mount the filesystem
+
+mount -a
+
+# Extend the file system on existing logical volume (lvm)
+
+xfs_growfs /dev/vg0/00
+xfs_growfs /dev/mapper/gitlab_vg-gitlab_lv
+
+
+resize2fs /dev/mapper/gitlab_vg-gitlab_lv
+
+resize2fs /dev/sda2
+resize2fs /dev/vg00/lvopt
+resize2fs /dev/vg00/lvvarlog
+resize2fs /dev/vgdata/lvorabck
+resize2fs /dev/mapper/rh-root
+resize2fs /dev/mapper/rh-var
+resize2fs /dev/mapper/rh-home
+resize2fs /dev/mapper/rh-var_log
+
+# list file systems
+lsblk
+
+growpart /dev/sda2
+resize2fs /dev/sda2
+
+#### ZFS
+
+parted -l
+zpool status -v
+zpool list zfs-pool0
+parted /dev/sdc rm 9
+parted /dev/sdc resizepart 1 100%
+zpool set autoexpand=on zfs-pool0
+zpool online -e zfs-pool0 sdc
+
+#### MISC OLD NOTES for fdisk stuff
+
+# fdisk
+
+	fdisk /dev/sda
+
+		Press p to print the partition table to identify the number of partitions. By default, there are 2: sda1 and sda2.
+		Press n to create a new primary partition.
+		Press p for primary.
+		Press 3 for the partition number, depending on the output of the partition table print.
+		Press Enter two times.
+		Press t to change the system's partition ID.
+		Press 3 to select the newly creation partition.
+		Type 8e to change the Hex Code of the partition for Linux LVM.
+		Press w to write the changes to the partition table. (failed? wtf)
+	
+# cfdisk
+
+	cfdisk
+
+		create a new partition in the free space
+		change partition type to Linux LVM
+		write changes
+		
