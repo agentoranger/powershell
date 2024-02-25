@@ -40,7 +40,7 @@ function Remove-RegistryHive {
                 if ($Process.ExitCode) {
                     Write-Error "$Job Registry hive could not be unloaded from registry [$($Path)] [$($Mount)] $_"
                 } else {
-                    Write-Verbose ("{0,-27}{1,-51}{2}" -f $Job,'Registry hive unloaded successfully',"[$($Mount)]")
+                    Write-Host ("{0,-27}{1,-51}{2}" -f $Job,'Registry hive unloaded successfully',"[$($Mount)]")
                 }
 
             } else {

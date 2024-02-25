@@ -25,16 +25,15 @@
             $regKey   = Test-RegistryPath  @PSBoundParameters -CreateKey
             $regValue = Test-RegistryValue @PSBoundParameters -ErrorAction SilentlyContinue
             if (-not $regKey) {
-                Write-Warning "[$($MyInvocation.MyCommand.Name)]`t`tRegistry key path is currently null`t`t[$($Path | Split-Path -Leaf)] [$($Name)]"
+                Write-Warning ("{0,-27}{1,-51}{2}" -f $Job, 'Registry key path is currently null',"[$($Path.Split('::',2)[1].TrimStart(':'))]")
                 return
             }
             if ($regValue) {
                 $null = Set-ItemProperty @PSBoundParameters -Force
-               #Write-Verbose "[$($MyInvocation.MyCommand.Name)]`t`tRegistry value written successfully`t`t[$($Path | Split-Path -Leaf)] [$($Name)] [$($Type):$($Value)]"
-                Write-Host ("{0,-27}{1,-51}{2}" -f $Job, 'Registry value written successfully', "[$($Path)] [$($Name)] [$($Type):$($Value)]")
+                Write-Host ("{0,-27}{1,-51}{2}" -f $Job, 'Registry value written successfully',"[$($Path.Split('::',2)[1].TrimStart(':'))] [$($Name)] [$($Type):$($Value)]")
             } else {
                 $null = New-ItemProperty @PSBoundParameters -Force
-                Write-Host ("{0,-27}{1,-51}{2}" -f $Job, 'Registry value created successfully', "[$($Path)] [$($Name)] [$($Type):$($Value)]")
+                Write-Host ("{0,-27}{1,-51}{2}" -f $Job, 'Registry value created successfully',"[$($Path.Split('::',2)[1].TrimStart(':'))] [$($Name)] [$($Type):$($Value)]")
             }
         } catch {
             Write-Error "$Job Registry value failed to be written $_"

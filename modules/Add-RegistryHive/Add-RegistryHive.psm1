@@ -39,7 +39,7 @@ function Add-RegistryHive {
                     Write-Error "$Job Registry hive could not be loaded [$($Mount)] $_"
                 } else {
                     $null = New-PSDrive -Name $Mount -PSProvider Registry -Root $Key -Scope Global
-                    Write-Verbose ("{0,-27}{1,-51}{2}" -f $Job,'Registry hive loaded successfully',"[$($Mount)]")
+                    Write-Host ("{0,-27}{1,-51}{2}" -f $Job,'Registry hive loaded successfully',"[$($Mount)]")
                 }
 
             } else {

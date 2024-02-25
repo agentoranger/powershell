@@ -94,7 +94,7 @@ function Disable-ContentDelivery {
                       ForEach-Object {New-Object System.Object | Add-Member -NotePropertyMembers $_ -PassThru}
                 )
                 Write-Host ("{0,-27}{1,-51}{2}" -f $Job, 'Deprovisioning Content Delivery for User with SID', "[$(($CDMPath -split '\\')[2])]")
-                $CDMValues | Set-RegistryValue
+                $null = $CDMValues | Set-RegistryValue
                 $CDMApps = ('CreativeEvents','Health','Subscriptions','SuggestedApps')
                 ForEach ($CDMApp in $CDMApps) {
                 $CDMAppPath = Join-Path -Path $CDMPath -ChildPath $CDMApp

@@ -16,7 +16,7 @@ function Get-GitHubRelease {
     process {
         try {
             If (-not $URI)         {$URI = "https://api.github.com/repos/$Owner/$Name/releases/latest"}
-            If (-not $AccessToken) {$AccessToken='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'}
+            If (-not $AccessToken) {$AccessToken='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'}
             If (-not $Headers)     {$Headers = @{'Authorization' = "Bearer $AccessToken"}}
 
             $ProgressPreference = 'SilentlyContinue'

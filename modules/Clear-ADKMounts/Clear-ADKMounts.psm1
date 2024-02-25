@@ -48,7 +48,10 @@ function Clear-ISOMounts {
 
 function Get-VHDMounts {
     [CmdletBinding()]
-    param(
+    param (
+        [Parameter(Mandatory=$true, Position=0, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Sources
     )
     begin {
         $Job = "[$($MyInvocation.MyCommand.Name)]"
@@ -57,7 +60,10 @@ function Get-VHDMounts {
         if (-not (Get-Command 'Get-VHD' -ErrorAction SilentlyContinue)) {
             return
         }
-        $VHDMounts = Get-VHD -ErrorAction SilentlyContinue | Where-Object { $_.Attached -eq $true }
+
+        $VHDFiles  = Get-ChildItem -Path $Sources -Filter *.vhd -ErrorAction SilentlyContinue
+        $VHDMounts = if ($VHDFiles) {$VHDFiles | ForEach-Object {Get-VHD -Path $_.FullName -ErrorAction SilentlyContinue} | Where-Object { $_.Attached -eq $true }}
+
         try {
             If ($VHDMounts) {
                 $VHDMounts
@@ -72,6 +78,8 @@ function Get-VHDMounts {
 function Clear-VHDMounts {
     [CmdletBinding()]
     param (
+        [Parameter(Mandatory=$true, Position=0, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
+        [string]$Sources
     )
     begin {
         $Job = "[$($MyInvocation.MyCommand.Name)]"
@@ -80,7 +88,9 @@ function Clear-VHDMounts {
         if (-not (Get-Command 'Get-VHD' -ErrorAction SilentlyContinue) ) {
             return
         }
-        $VHDMounts = Get-VHDMounts
+        $VHDFiles  = Get-ChildItem -Path $Sources -Filter *.vhd -ErrorAction SilentlyContinue
+        $VHDMounts = if ($VHDFiles) {$VHDFiles | ForEach-Object {Get-VHD -Path $_.FullName -ErrorAction SilentlyContinue} | Where-Object { $_.Attached -eq $true }}
+
         try {
             if ($VHDMounts) {
                 ForEach ($VHD in $VHDMounts) {
@@ -131,10 +141,11 @@ function Clear-REGMounts {
 function Clear-WIMMounts {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$false, Position=0, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
-        [switch]$Save,
 
         [Parameter(Mandatory=$false, Position=1, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
+        [switch]$Save,
+
+        [Parameter(Mandatory=$false, Position=2, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
         [switch]$Discard
     )
     begin {
@@ -167,9 +178,12 @@ function Clear-ADKMounts {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory=$false, Position=0, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
-        [switch]$Save,
+        [string]$Sources,
 
         [Parameter(Mandatory=$false, Position=1, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
+        [switch]$Save,
+
+        [Parameter(Mandatory=$false, Position=2, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
         [switch]$Discard
     )
     begin {
@@ -182,7 +196,7 @@ function Clear-ADKMounts {
             $null = Clear-REGMounts
             $null = Clear-WindowsCorruptMountPoint
             $null = Clear-ISOMounts
-            $null = Clear-VHDMounts
+            $null = Clear-VHDMounts -Sources $Sources
           
             if ($Save) {
                 $null = Clear-WIMMounts -Save
@@ -201,22 +215,22 @@ function Clear-ADKCache {
     [CmdletBinding()]
     param(
 
-        [Parameter(Mandatory=$true, Position=1, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
+        [Parameter(Mandatory=$true, Position=0, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
         [string]$Sources,
 
-        [Parameter(Mandatory=$true, Position=2, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
+        [Parameter(Mandatory=$true, Position=1, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
         [string]$Edition,
 
-        [Parameter(Mandatory=$true, Position=3, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
+        [Parameter(Mandatory=$true, Position=2, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
         [string]$Preset,
 
-        [Parameter(Mandatory=$true, Position=4, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
+        [Parameter(Mandatory=$true, Position=3, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
         [string]$Deploy,
 
-        [Parameter(Mandatory=$true, Position=5, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
+        [Parameter(Mandatory=$true, Position=4, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
         [string]$Mount,
 
-        [Parameter(Mandatory=$true, Position=6, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
+        [Parameter(Mandatory=$true, Position=5, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
         [string]$LogPath
     )
     begin {

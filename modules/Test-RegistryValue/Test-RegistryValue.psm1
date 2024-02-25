@@ -18,14 +18,17 @@ function Test-RegistryValue {
         [string]$Value
 
     )
+    begin {
+        $Job = "[$($MyInvocation.MyCommand.Name)]"
+    }
     process {
         try {
             $regValue = Get-ItemProperty -Path $Path -Name $Name -ErrorAction SilentlyContinue
             if ($regValue) {
-                Write-Debug "[$($MyInvocation.MyCommand.Name)]`tRegistry value found successfully`t`t[$($Path | Split-Path -Leaf)] [$($Name)]"
+                Write-Debug ("{0,-27}{1,-51}{2}" -f $Job, 'Registry value found successfully',"[$($Path.Split('::',2)[1].TrimStart(':'))]")
                 return $true
             } else {
-                Write-Debug "[$($MyInvocation.MyCommand.Name)]`tRegistry value does not exist`t`t`t[$($Path | Split-Path -Leaf)] [$($Name)]"
+                Write-Debug ("{0,-27}{1,-51}{2}" -f $Job, 'Registry value does not exist',"[$($Path.Split('::',2)[1].TrimStart(':'))]")
                 return $false
             }
         } catch {

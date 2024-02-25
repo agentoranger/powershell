@@ -30,14 +30,14 @@ function Test-RegistryPath {
             if (-not (Test-Path -Path $Path)) {
                 if ($CreateKey) {
                     $null = New-Item -Path $Path -ItemType Directory
-                    Write-Host ("{0,-27}{1,-51}{2}" -f $Job, 'Registry key path created successfully',"[$($Path)]")
+                    Write-Host ("{0,-27}{1,-51}{2}" -f $Job, 'Registry key path created successfully',"[$($Path.Split('::',2)[1].TrimStart(':\'))]")
                     Write-Output $true
                 } else {
-                    Write-Host ("{0,-27}{1,-51}{2}" -f $Job, 'Registry key path does not exist',"[$($Path)]")
+                    Write-Host ("{0,-27}{1,-51}{2}" -f $Job, 'Registry key path does not exist',"[$($Path.Split('::',2)[1].TrimStart(':\'))]")
                     Write-Output $false
                 }
             } else {
-                Write-Verbose ("{0,-27}{1,-51}{2}" -f $Job, 'Registry key path found successfully',"[$($Path)]")
+                Write-Verbose ("{0,-27}{1,-51}{2}" -f $Job, 'Registry key path found successfully',"[$($Path.Split('::',2)[1].TrimStart(':\'))]")
                 Write-Output $true
             }
         } catch {

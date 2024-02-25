@@ -3,7 +3,6 @@
 function Clear-ADKCache {
     [CmdletBinding()]
     param(
-
         [Parameter(Mandatory=$true, Position=1, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
         [string]$Sources,
 
@@ -50,7 +49,6 @@ function Clear-ADKCache {
                     Write-Host ("{0,-27}{1,-51}{2}" -f $Job, 'Clearing cached system image data', "[$($Path)]")
                 }
             }
-
             foreach ($Path in $Scratch, $Mount) {
                 if (-not  (Test-Path -Path $Path -PathType Container)) {
                     $null = New-Item -Path $Path -ItemType Directory -Force -Confirm:$false
